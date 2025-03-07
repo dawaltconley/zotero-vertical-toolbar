@@ -1,0 +1,14 @@
+{
+  "name": "zotero-vertical-toolbar",
+  "version": "0.1.0",
+  "description": "Reorients the toolbar of Zotero's reader.",
+  "main": "src/bootstrap.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "^3.5.3"
+  }
+}
