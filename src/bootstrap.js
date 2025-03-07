@@ -1,42 +1,28 @@
-var MakeItRed;
+var Toolbar;
 
 function log(msg) {
-	Zotero.debug("Make It Red: " + msg);
+  Zotero.debug("vertical-toolbar@dylan.ac:" + msg);
 }
 
 function install() {
-	log("Installed 2.0");
+  log("Installed Vertical Toolbar Plugin");
 }
 
 async function startup({ id, version, rootURI }) {
-	log("Starting 2.0");
-	
-	Zotero.PreferencePanes.register({
-		pluginID: 'make-it-red@example.com',
-		src: rootURI + 'preferences.xhtml',
-		scripts: [rootURI + 'preferences.js']
-	});
-	
-	Services.scriptloader.loadSubScript(rootURI + 'make-it-red.js');
-	MakeItRed.init({ id, version, rootURI });
-	MakeItRed.addToAllWindows();
-	await MakeItRed.main();
-}
+  log("Starting 2.0");
 
-function onMainWindowLoad({ window }) {
-	MakeItRed.addToWindow(window);
-}
-
-function onMainWindowUnload({ window }) {
-	MakeItRed.removeFromWindow(window);
+  Services.scriptloader.loadSubScript(rootURI + "vertical-toolbar.js");
+  Toolbar = new VerticalToolbar({ id, version, rootURI });
+  Toolbar.registerObserver();
+  await Toolbar.styleExistingTabs();
 }
 
 function shutdown() {
-	log("Shutting down 2.0");
-	MakeItRed.removeFromAllWindows();
-	MakeItRed = undefined;
+  log("Shutting down 2.0");
+  Toolbar.unregisterObserver();
+  Toolbar = undefined;
 }
 
 function uninstall() {
-	log("Uninstalled 2.0");
+  log("Uninstalled Vertical Toolbar Plugin");
 }
