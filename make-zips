@@ -1,0 +1,14 @@
+#!/bin/bash
+version=$(jq ".version" ./src/manifest.json)
+xpi_file="vertical-toolbar-${version}.xpi"
+
+set -euo pipefail
+
+rm -rf build
+mkdir build
+
+cd ./src
+zip -r "../build/$xpi_file" *
+cd ../build
+
+jq ".addons[\"vertical-toolbar@dylan.ac\"].updates[0].update_hash = \"sha256:`shasum -a 256 $xpi_file | cut -d' ' -f1`\"" ../updates.json.tmpl > updates.json

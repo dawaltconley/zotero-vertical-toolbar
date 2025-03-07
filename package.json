@@ -4,6 +4,7 @@
   "description": "Reorients the toolbar of Zotero's reader",
   "main": "src/bootstrap.js",
   "scripts": {
+    "build": "./make-zips",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
