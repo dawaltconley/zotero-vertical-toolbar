@@ -85,9 +85,9 @@ const STYLES_CSS = `
   min-height: auto;
   min-width: 42px;
   height: 100% !important;
+  height: calc(100% - var(--bottom-placeholder-height)) !important;
   position: absolute;
   top: 0;
-  bottom: 0;
   right: 0;
   left: auto;
   padding: 8px 0px;
