@@ -2,7 +2,7 @@ var Toolbar;
 var Zoom;
 
 function log(msg) {
-  Zotero.debug("vertical-toolbar@dylan.ac:" + msg);
+  Zotero.debug("vertical-toolbar@dylan.ac: " + msg);
 }
 
 function install() {
@@ -19,7 +19,7 @@ async function startup({ id, version, rootURI }) {
 
   Services.scriptloader.loadSubScript(rootURI + "center-zoom.js");
   Zoom = new CenterZoom({ id, version, rootURI });
-  Zoom.registerObserver();
+  Zoom.startup();
 }
 
 function shutdown() {
@@ -27,7 +27,7 @@ function shutdown() {
   Toolbar.unregisterObserver();
   Toolbar = undefined;
 
-  Zoom.unregisterObserver();
+  Zoom.shutdown();
   Zoom = undefined;
 }
 
