@@ -1,5 +1,5 @@
 #!/bin/bash
-version=$(jq ".version" ./src/manifest.json)
+version=$(jq -r ".version" ./src/manifest.json)
 xpi_file="vertical-toolbar-${version}.xpi"
 
 set -euo pipefail
