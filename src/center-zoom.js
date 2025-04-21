@@ -99,7 +99,7 @@ class CenterZoom {
     let current;
     const pages = viewer.querySelectorAll('.pdfViewer .page');
     for (const p of pages) {
-      if (p.offsetTop === viewer.scrollTop) {
+      if (Math.abs(p.offsetTop - viewer.scrollTop) < 5) {
         return p;
       }
     }
