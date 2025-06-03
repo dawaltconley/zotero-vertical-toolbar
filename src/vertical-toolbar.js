@@ -31,6 +31,17 @@ class VerticalToolbar {
     this.log('appended styles to tab: ' + reader.tabID);
   }
 
+  async removeStylesFromReader(reader) {
+    await reader._waitForReader()
+    await reader._initPromise
+    const doc = reader?._iframeWindow?.document;
+    if (!doc) {
+      this.log(`couldn't remove styles; tab ${reader.tabID} not ready`);
+      return;
+    }
+    doc.getElementById(STYLES_ID)?.remove();
+  }
+
   async styleExistingTabs() {
     this.log('adding styles to existing tabs')
     const readers = Zotero.Reader._readers;
@@ -53,6 +64,7 @@ class VerticalToolbar {
             await Promise.all(tabIDs.map(async (id) => {
               const reader = Zotero.Reader.getByTabID(id);
               await this.attachStylesToReader(reader);
+              this.addMenuOptions(reader);
             }))
           }
         },
@@ -69,6 +81,49 @@ class VerticalToolbar {
       this.observerID = null;
     }
   }
+
+  #addedElements = []
+
+  addMenuOptions(reader) {
+    const doc = reader?._iframeWindow?.document;
+    if (!doc) {
+      this.log(`couldn't add menu options; tab ${reader.tabID} not ready`);
+      return;
+    }
+    const toggle = doc.createXULElement('menuitem');
+    toggle.id = 'vertical-toolbar-toggle';
+    toggle.setAttribute('label', 'Vertical Toolbar');
+		toggle.setAttribute('type', 'checkbox');
+    toggle.addEventListener('command', () => {
+      if (toggle.checked) {
+        this.attachStylesToReader(reader);
+      } else {
+        this.removeStylesFromReader(reader);
+      }
+    });
+    doc.getElementById('menu_viewPopup').appendChild(toggle);
+    this.#addedElements.push(toggle.id)
+  }
+
+  removeMenuOptions(reader) {
+    const doc = reader?._iframeWindow?.document;
+    if (!doc) {
+      this.log(`couldn't remove menu options; tab ${reader.tabID} not ready`);
+      return;
+    }
+    for (const id of this.#addedElements) {
+      doc.getElementById(id)?.remove();
+    }
+  }
+
+  // async startup() {
+  //   this.registerObserver();
+  //   await this.styleExistingTabs();
+  // }
+  //
+  // shutdown() {
+  //   this.unregisterObserver();
+  // }
 
   log(msg) {
     Zotero.debug(`${this.id}: ${msg}`);
