@@ -7,9 +7,18 @@
     "build": "./make-zips",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Dylan Awalt-Conley",
   "license": "ISC",
   "devDependencies": {
-    "prettier": "^3.5.3"
-  }
+    "prettier": "^3.5.3",
+    "zotero-plugin-scaffold": "^0.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dawaltconley/zotero-vertical-toolbar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dawaltconley/zotero-vertical-toolbar/issues"
+  },
+  "homepage": "https://github.com/dawaltconley/zotero-vertical-toolbar#readme"
 }
