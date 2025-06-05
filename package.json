@@ -2,6 +2,13 @@
   "name": "zotero-vertical-toolbar",
   "version": "0.1.0",
   "description": "Reorients the toolbar of Zotero's reader",
+  "config": {
+    "addonName": "Vertical Toolbar",
+    "addonID": "vertical-toolbar@dylan.ac",
+    "addonRef": "vertical-toolbar",
+    "addonInstance": "VerticalToolbar",
+    "prefsPrefix": "extensions.zotero.vertical-toolbar"
+  },
   "main": "src/bootstrap.js",
   "scripts": {
     "build": "./make-zips",
