@@ -1,46 +1,83 @@
-.toolbar {
-  min-height: auto;
-  min-width: 42px;
-  height: 100% !important;
-  height: calc(100% - var(--bottom-placeholder-height)) !important;
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: auto;
-  padding: 8px 0px;
-  border-bottom: none;
-  border-left: var(--material-panedivider);
+[data-toolbar-position='top'] {
+  --vertical-toolbar-width: 0px;
+}
 
-  &,
-  .start,
-  .center,
-  .end {
-    flex-direction: column;
-  }
+[data-toolbar-position='left'],
+[data-toolbar-position='right'] {
+  --vertical-toolbar-width: 42px;
 
-  .divider {
-    width: 20px;
-    height: 1px;
-  }
+  .toolbar {
+    min-height: auto;
+    min-width: var(--vertical-toolbar-width);
+    height: 100% !important;
+    height: calc(100% - var(--bottom-placeholder-height)) !important;
+    position: absolute;
+    top: 0;
+    padding: 8px 0px;
+    border-bottom: none;
 
-  #pageNumber,
-  #numPages {
-    width: 38px;
-  }
-
-  #numPages {
-    display: block;
-    text-align: center;
-
-    > div {
-      display: inline;
-      position: static;
+    &,
+    .start,
+    .center,
+    .end {
+      flex-direction: column;
     }
+
+    .divider {
+      width: 20px;
+      height: 1px;
+    }
+
+    #pageNumber,
+    #numPages {
+      width: calc(var(--vertical-toolbar-width) - 4px);
+    }
+
+    #numPages {
+      display: block;
+      text-align: center;
+
+      > div {
+        display: inline;
+        position: static;
+      }
+    }
+  }
+
+  #sidebarContainer,
+  .sidebar-resizer,
+  #split-view,
+  .split-view {
+    top: 0px;
   }
 }
 
-#split-view,
-.split-view {
-  top: 0;
-  right: 42px;
+[data-toolbar-position='left'] {
+  .toolbar {
+    left: 0;
+    right: auto;
+    border-right: var(--material-panedivider);
+  }
+
+  #split-view,
+  .split-view {
+    left: var(--vertical-toolbar-width);
+  }
+
+  &[dir='ltr'] body.sidebar-open .toolbar {
+    left: var(--sidebar-width);
+  }
+}
+
+[data-toolbar-position='right'] {
+  .toolbar {
+    left: auto;
+    right: 0;
+    border-left: var(--material-panedivider);
+  }
+
+  #split-view,
+  .split-view {
+    right: var(--vertical-toolbar-width);
+  }
 }

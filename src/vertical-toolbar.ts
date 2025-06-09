@@ -1,4 +1,5 @@
 import verticalToolbarCss from './vertical-toolbar.scss';
+import { config } from '../package.json';
 
 export interface VerticalToolbarOptions {
   id: string;
@@ -13,6 +14,11 @@ export class VerticalToolbar {
   readonly version: string;
   readonly rootURI: string;
 
+  #position: ToolbarPosition = 'right';
+  get position(): ToolbarPosition {
+    return this.#position;
+  }
+
   constructor({
     id = 'vertical-toolbar@dylan.ac',
     stylesId = 'verticalToolbarStyles',
@@ -25,6 +31,17 @@ export class VerticalToolbar {
     this.rootURI = rootURI;
   }
 
+  async startup(): Promise<void> {
+    Zotero.getMainWindows().forEach((w) => this.addMenuItems(w));
+    this.registerObserver();
+    await this.styleExistingTabs();
+  }
+
+  shutdown(): void {
+    Zotero.getMainWindows().forEach((w) => this.removeMenuItems(w));
+    this.unregisterObserver();
+  }
+
   async attachStylesToReader(reader: _ZoteroTypes.ReaderInstance) {
     await reader._waitForReader();
     await reader._initPromise;
@@ -33,6 +50,8 @@ export class VerticalToolbar {
       this.log(`couldn't attach styles; tab ${reader.tabID} not ready`);
       return;
     }
+    (doc.documentElement as HTMLElement).dataset.toolbarPosition =
+      this.position;
     if (doc.getElementById(this.stylesId)) {
       this.log(`skipping ${reader.tabID}: styles already attached`);
       return;
@@ -88,7 +107,85 @@ export class VerticalToolbar {
     }
   }
 
+  addMenuItems(window: _ZoteroTypes.MainWindow): void {
+    const doc = window.document;
+    const menuId = `${config.addonRef}-radio-menu`;
+    if (doc.getElementById(menuId)) {
+      this.log('toolbar menu already attached');
+      return;
+    }
+
+    window.MozXULElement.insertFTLIfNeeded(`${config.addonRef}-menu.ftl`);
+
+    // submenu container
+    const menu = doc.createXULElement('menu') as XULMenuElement;
+    menu.id = menuId;
+    menu.classList.add('menu-type-reader');
+    menu.setAttribute('data-l10n-id', menuId);
+
+    // submenu popup, contains menu items
+    const popup = doc.createXULElement('menupopup') as XULMenuPopupElement;
+    menu.appendChild(popup);
+
+    // menu items: radio buttons
+    const radios: XULMenuItemElement[] = [];
+    for (let i = 0; i < 3; i++) {
+      const radio = doc.createXULElement('menuitem') as XULMenuItemElement;
+      radio.setAttribute('type', 'radio');
+      radio.setAttribute('name', `${config.addonRef}-menu-ui-radio`);
+
+      if (i === 0) {
+        radio.id = `${config.addonRef}-radio-menu-top`;
+        radio.value = 'top';
+      } else if (i === 1) {
+        radio.id = `${config.addonRef}-radio-menu-left`;
+        radio.value = 'left';
+      } else if (i === 2) {
+        radio.id = `${config.addonRef}-radio-menu-right`;
+        radio.value = 'right';
+      }
+
+      radio.setAttribute('data-l10n-id', radio.id);
+      if (radio.value === this.position) {
+        radio.setAttribute('checked', 'true');
+      }
+
+      radios.push(radio);
+      popup.appendChild(radio);
+    }
+
+    popup.addEventListener('command', async ({ target }: CommandEvent) => {
+      if (target && 'value' in target && isToolbarPosition(target.value)) {
+        this.#position = target.value;
+        await this.styleExistingTabs();
+      }
+    });
+
+    doc.getElementById('menu_viewPopup')?.appendChild(menu);
+    this.storeAddedElement(menu);
+  }
+
+  removeMenuItems(window: _ZoteroTypes.MainWindow): void {
+    const doc = window.document;
+    for (const id of this.#addedElementIDs) {
+      doc.getElementById(id)?.remove();
+    }
+  }
+
+  #addedElementIDs: string[] = [];
+  storeAddedElement(elem: Element) {
+    if (!elem.id) {
+      throw new Error('Element must have an id');
+    }
+    this.#addedElementIDs.push(elem.id);
+  }
+
   log(msg: string) {
     Zotero.debug(`${this.id}: ${msg}`);
   }
 }
+
+const ToolbarPosition = ['top', 'left', 'right'] as const;
+type ToolbarPosition = (typeof ToolbarPosition)[number];
+const isToolbarPosition = (value: any): value is ToolbarPosition =>
+  ToolbarPosition.some((p) => p === value?.toString());

@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 
-var Toolbar;
+var toolbar;
 
 function log(msg) {
   Zotero.debug('__addonID__' + msg);
@@ -16,15 +16,14 @@ async function startup({ id, version, rootURI }) {
   Services.scriptloader.loadSubScript(
     `${rootURI}/content/scripts/__addonRef__.js`,
   );
-  Toolbar = new __addonInstance__.VerticalToolbar({ id, version, rootURI });
-  Toolbar.registerObserver();
-  await Toolbar.styleExistingTabs();
+  toolbar = new __addonInstance__.VerticalToolbar({ id, version, rootURI });
+  await toolbar.startup();
 }
 
 function shutdown() {
   log('Shutting down plugin');
-  Toolbar.unregisterObserver();
-  Toolbar = undefined;
+  toolbar.shutdown();
+  toolbar = undefined;
 }
 
 function uninstall() {
