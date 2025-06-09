@@ -10,7 +10,11 @@
     "prefsPrefix": "extensions.zotero.vertical-toolbar"
   },
   "scripts": {
-    "build": "zotero-plugin build",
+    "dev": "zotero-plugin serve",
+    "build": "zotero-plugin build && tsc --noEmit",
+    "lint:check": "prettier --check . && eslint .",
+    "lint:fix": "prettier --write . && eslint . --fix",
+    "release": "npm run lint:check && zotero-plugin release",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Dylan Awalt-Conley",
