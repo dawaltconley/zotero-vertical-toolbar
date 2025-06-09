@@ -1,4 +1,4 @@
-import verticalToolbarCss from './vertical-toolbar.css';
+import verticalToolbarCss from './vertical-toolbar.scss';
 
 export interface VerticalToolbarOptions {
   id: string;
