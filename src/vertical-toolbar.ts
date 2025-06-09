@@ -1,21 +1,28 @@
+import verticalToolbarCss from './vertical-toolbar.css';
+
 export interface VerticalToolbarOptions {
   id: string;
   version: string;
   rootURI: string;
+  stylesId?: string;
 }
 
 export class VerticalToolbar {
-  id = 'vertical-toolbar@dylan.ac';
-  version?: string;
-  rootURI?: string;
-  initialized = false;
+  readonly id: string;
+  readonly stylesId: string;
+  readonly version: string;
+  readonly rootURI: string;
 
-  constructor({ id, version, rootURI }: VerticalToolbarOptions) {
-    if (this.initialized) return;
+  constructor({
+    id = 'vertical-toolbar@dylan.ac',
+    stylesId = 'verticalToolbarStyles',
+    version,
+    rootURI,
+  }: VerticalToolbarOptions) {
     this.id = id;
+    this.stylesId = stylesId;
     this.version = version;
     this.rootURI = rootURI;
-    this.initialized = true;
   }
 
   async attachStylesToReader(reader: _ZoteroTypes.ReaderInstance) {
@@ -26,13 +33,13 @@ export class VerticalToolbar {
       this.log(`couldn't attach styles; tab ${reader.tabID} not ready`);
       return;
     }
-    if (doc.getElementById(STYLES_ID)) {
+    if (doc.getElementById(this.stylesId)) {
       this.log(`skipping ${reader.tabID}: styles already attached`);
       return;
     }
     const styles = doc.createElement('style');
-    styles.id = STYLES_ID;
-    styles.innerText = STYLES_CSS;
+    styles.id = this.stylesId;
+    styles.innerText = verticalToolbarCss;
     doc.documentElement.appendChild(styles);
     this.log('appended styles to tab: ' + reader.tabID);
   }
@@ -85,47 +92,3 @@ export class VerticalToolbar {
     Zotero.debug(`${this.id}: ${msg}`);
   }
 }
-
-const STYLES_ID = 'verticalToolbarStyles';
-const STYLES_CSS = `
-.toolbar, .toolbar .start, .toolbar .center, .toolbar .end {
-  flex-direction: column;
-}
-
-.toolbar {
-  min-height: auto;
-  min-width: 42px;
-  height: 100% !important;
-  height: calc(100% - var(--bottom-placeholder-height)) !important;
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: auto;
-  padding: 8px 0px;
-  border-bottom: none;
-  border-left: var(--material-panedivider);
-}
-
-.toolbar .divider {
-  width: 20px;
-  height: 1px;
-}
-
-.toolbar #pageNumber, .toolbar #numPages {
-  width: 38px;
-}
-
-.toolbar #numPages {
-  display: block;
-  text-align: center;
-}
-
-.toolbar #numPages > div {
-  display: inline;
-  position: static;
-}
-
-#split-view, .split-view {
-  top: 0;
-  right: 42px;
-}`.trim();
