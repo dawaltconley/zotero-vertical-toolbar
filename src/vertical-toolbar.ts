@@ -161,8 +161,15 @@ export class VerticalToolbar {
       }
     });
 
-    doc.getElementById('menu_viewPopup')?.appendChild(menu);
-    this.storeAddedElement(menu);
+    const viewMenu = doc.getElementById('menu_viewPopup');
+    const referenceNode =
+      viewMenu?.querySelector('menuseparator.menu-type-library') || null;
+    const inserted = viewMenu?.insertBefore(menu, referenceNode);
+
+    if (inserted) {
+      this.log(`successfully inserted menu: ${menu.id}`);
+      this.storeAddedElement(menu);
+    }
   }
 
   removeMenuItems(window: _ZoteroTypes.MainWindow): void {
