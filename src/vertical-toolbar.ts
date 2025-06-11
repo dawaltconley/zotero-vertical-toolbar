@@ -1,5 +1,6 @@
-import verticalToolbarCss from './vertical-toolbar.scss';
 import { config } from '../package.json';
+import { ToolbarPosition } from './utils';
+import verticalToolbarCss from './vertical-toolbar.scss';
 
 export interface VerticalToolbarOptions {
   id: string;
@@ -129,21 +130,18 @@ export class VerticalToolbar {
 
     // menu items: radio buttons
     const radios: XULMenuItemElement[] = [];
-    for (let i = 0; i < 3; i++) {
+    for (const value of ToolbarPosition) {
       const radio = doc.createXULElement('menuitem') as XULMenuItemElement;
       radio.setAttribute('type', 'radio');
       radio.setAttribute('name', `${config.addonRef}-menu-ui-radio`);
 
-      if (i === 0) {
-        radio.id = `${config.addonRef}-radio-menu-top`;
-        radio.value = 'top';
-      } else if (i === 1) {
-        radio.id = `${config.addonRef}-radio-menu-left`;
-        radio.value = 'left';
-      } else if (i === 2) {
-        radio.id = `${config.addonRef}-radio-menu-right`;
-        radio.value = 'right';
-      }
+      radio.id = `${config.addonRef}-radio-menu-${value}`;
+      radio.value = value;
+      radio.addEventListener('command', async () => {
+        if (this.#position === radio.value) return;
+        this.#position = value;
+        await this.styleExistingTabs();
+      });
 
       radio.setAttribute('data-l10n-id', radio.id);
       if (radio.value === this.position) {
@@ -153,13 +151,6 @@ export class VerticalToolbar {
       radios.push(radio);
       popup.appendChild(radio);
     }
-
-    popup.addEventListener('command', async ({ target }: CommandEvent) => {
-      if (target && 'value' in target && isToolbarPosition(target.value)) {
-        this.#position = target.value;
-        await this.styleExistingTabs();
-      }
-    });
 
     const viewMenu = doc.getElementById('menu_viewPopup');
     const referenceNode =
@@ -191,8 +182,3 @@ export class VerticalToolbar {
     Zotero.debug(`${this.id}: ${msg}`);
   }
 }
-
-const ToolbarPosition = ['top', 'left', 'right'] as const;
-type ToolbarPosition = (typeof ToolbarPosition)[number];
-const isToolbarPosition = (value: any): value is ToolbarPosition =>
-  ToolbarPosition.some((p) => p === value?.toString());
