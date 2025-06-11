@@ -19,6 +19,14 @@ export class VerticalToolbar {
   get position(): ToolbarPosition {
     return this.#position;
   }
+  set position(p: ToolbarPosition) {
+    if (p !== this.#position) {
+      this.#updatedTabs.clear();
+    }
+    this.#position = p;
+  }
+
+  #updatedTabs = new Set<string | number>();
 
   constructor({
     id = 'vertical-toolbar@dylan.ac',
@@ -33,9 +41,13 @@ export class VerticalToolbar {
   }
 
   async startup(): Promise<void> {
-    Zotero.getMainWindows().forEach((w) => this.addMenuItems(w));
     this.registerObserver();
-    await this.styleExistingTabs();
+    await Promise.all(
+      Zotero.getMainWindows().map(async (w) => {
+        this.addMenuItems(w);
+        await this.styleCurrentTab(w);
+      }),
+    );
   }
 
   shutdown(): void {
@@ -44,6 +56,7 @@ export class VerticalToolbar {
   }
 
   async attachStylesToReader(reader: _ZoteroTypes.ReaderInstance) {
+    // wait until tab is ready
     await reader._waitForReader();
     await reader._initPromise;
     const doc = reader?._iframeWindow?.document;
@@ -51,27 +64,43 @@ export class VerticalToolbar {
       this.log(`couldn't attach styles; tab ${reader.tabID} not ready`);
       return;
     }
+
+    // update position of toolbar in tab document
     (doc.documentElement as HTMLElement).dataset.toolbarPosition =
       this.position;
+
+    // add stylesheet to tab if needed
     if (doc.getElementById(this.stylesId)) {
       this.log(`skipping ${reader.tabID}: styles already attached`);
-      return;
+    } else {
+      const styles = doc.createElement('style');
+      styles.id = this.stylesId;
+      styles.innerText = verticalToolbarCss;
+      doc.documentElement.appendChild(styles);
+      this.log('appended styles to tab: ' + reader.tabID);
     }
-    const styles = doc.createElement('style');
-    styles.id = this.stylesId;
-    styles.innerText = verticalToolbarCss;
-    doc.documentElement.appendChild(styles);
-    this.log('appended styles to tab: ' + reader.tabID);
+
+    // mark tab as updated, skipping future updates until styles change
+    this.#updatedTabs.add(reader.tabID);
   }
 
   async styleExistingTabs() {
     this.log('adding styles to existing tabs');
-    const readers = Zotero.Reader._readers;
+    const readers = Zotero.Reader._readers.filter(
+      (r) => !this.#updatedTabs.has(r.tabID),
+    );
     this.log(
       `found ${readers.length} reader tags: ${readers.map((r) => r.tabID).join(', ')}`,
     );
     await Promise.all(readers.map((r) => this.attachStylesToReader(r)));
     this.log('done adding styles to existing tabs');
+  }
+
+  async styleCurrentTab(window: _ZoteroTypes.MainWindow): Promise<void> {
+    const current = Zotero.Reader.getByTabID(window.Zotero_Tabs.selectedID);
+    if (current) {
+      await this.attachStylesToReader(current);
+    }
   }
 
   observerID?: string;
@@ -80,12 +109,16 @@ export class VerticalToolbar {
     if (this.observerID) {
       throw new Error(`${this.id}: observer is already registered`);
     }
+    type Trigger = _ZoteroTypes.Notifier.Event | 'load'; // zotero-types doesn't include 'load' in the event definition, but tabs have a load event
+    const triggers = new Set<Trigger>(['add', 'load', 'select']);
     this.observerID = Zotero.Notifier.registerObserver(
       {
         notify: async (event, type, ids, extraData) => {
-          // @ts-expect-error zotero-types doesn't include 'load' in the event definition, but tabs have a load event
-          if ((event === 'add' || event === 'load') && type === 'tab') {
-            const tabIDs = ids.filter((id) => extraData[id].type === 'reader');
+          if (triggers.has(event) && type === 'tab') {
+            const tabIDs = ids.filter(
+              (id) =>
+                extraData[id].type === 'reader' && !this.#updatedTabs.has(id),
+            );
             await Promise.all(
               tabIDs.map(async (id) => {
                 const reader = Zotero.Reader.getByTabID(id.toString());
@@ -138,9 +171,8 @@ export class VerticalToolbar {
       radio.id = `${config.addonRef}-radio-menu-${value}`;
       radio.value = value;
       radio.addEventListener('command', async () => {
-        if (this.#position === radio.value) return;
-        this.#position = value;
-        await this.styleExistingTabs();
+        this.position = value;
+        this.styleCurrentTab(window);
       });
 
       radio.setAttribute('data-l10n-id', radio.id);
