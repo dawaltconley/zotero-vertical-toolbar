@@ -1,5 +1,5 @@
 import { config } from '../package.json';
-import { ToolbarPosition } from './utils';
+import { ToolbarPosition, isToolbarPosition } from './utils';
 import verticalToolbarCss from './vertical-toolbar.scss';
 
 export interface VerticalToolbarOptions {
@@ -15,15 +15,16 @@ export class VerticalToolbar {
   readonly version: string;
   readonly rootURI: string;
 
-  #position: ToolbarPosition = 'right';
+  #position: ToolbarPosition = this.loadPosition() || 'right';
   get position(): ToolbarPosition {
     return this.#position;
   }
-  set position(p: ToolbarPosition) {
-    if (p !== this.#position) {
+  set position(pos: ToolbarPosition) {
+    if (pos !== this.#position) {
       this.#updatedTabs.clear();
+      this.savePosition(pos);
     }
-    this.#position = p;
+    this.#position = pos;
   }
 
   #updatedTabs = new Set<string | number>();
@@ -222,7 +223,20 @@ export class VerticalToolbar {
     this.#addedElementIDs.push(elem.id);
   }
 
+  loadPosition(): ToolbarPosition | null {
+    const saved = Zotero.Prefs.get(PREFS.toolbarPosition, true);
+    return isToolbarPosition(saved) ? saved : null;
+  }
+
+  savePosition(pos: ToolbarPosition) {
+    Zotero.Prefs.set(PREFS.toolbarPosition, pos, true);
+  }
+
   log(msg: string) {
     Zotero.debug(`${this.id}: ${msg}`);
   }
 }
+
+const PREFS = {
+  toolbarPosition: `${config.prefsPrefix}.toolbar-position`,
+} satisfies Record<string, string>;
