@@ -42,17 +42,29 @@ export class VerticalToolbar {
 
   async startup(): Promise<void> {
     this.registerObserver();
-    await Promise.all(
-      Zotero.getMainWindows().map(async (w) => {
-        this.addMenuItems(w);
-        await this.styleCurrentTab(w);
-      }),
-    );
+    await this.addToAllWindows();
   }
 
   shutdown(): void {
-    Zotero.getMainWindows().forEach((w) => this.removeMenuItems(w));
     this.unregisterObserver();
+    this.removeFromAllWindows();
+  }
+
+  async addToWindow(window: _ZoteroTypes.MainWindow): Promise<void> {
+    this.addMenuItems(window);
+    await this.styleCurrentTab(window);
+  }
+
+  async addToAllWindows(): Promise<void> {
+    await Promise.all(Zotero.getMainWindows().map((w) => this.addToWindow(w)));
+  }
+
+  removeFromWindow(window: _ZoteroTypes.MainWindow): void {
+    this.removeMenuItems(window);
+  }
+
+  removeFromAllWindows(): void {
+    Zotero.getMainWindows().forEach((w) => this.removeFromWindow(w));
   }
 
   async attachStylesToReader(reader: _ZoteroTypes.ReaderInstance) {

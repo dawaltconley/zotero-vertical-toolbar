@@ -20,6 +20,16 @@ async function startup({ id, version, rootURI }) {
   await toolbar.startup();
 }
 
+async function onMainWindowLoad({ window }) {
+  toolbar.registerObserver();
+  await toolbar.addToWindow(window);
+}
+
+function onMainWindowUnload({ window }) {
+  toolbar.unregisterObserver();
+  toolbar.removeFromWindow(window);
+}
+
 function shutdown() {
   log('Shutting down plugin');
   toolbar.shutdown();
