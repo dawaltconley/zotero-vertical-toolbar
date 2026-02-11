@@ -154,6 +154,47 @@ export class VerticalToolbar {
     }
   }
 
+  addMenuItems2({ menuID }: { menuID: string }): void {
+    // @ts-expect-error MenuManager is new with Zotero 8: https://www.zotero.org/support/dev/zotero_8_for_developers#custom_menu_items
+    const registeredID = Zotero.MenuManager.registerMenu({
+      menuID: `${config.addonRef}-radio-menu`,
+      pluginID: this.id,
+      target: 'reader/menubar/view',
+      menus: [
+        {
+          menuType: 'menuitem',
+          l10nID: menuID,
+          onShow: (event: any, context: any) => {
+            this.log('show');
+            this.log(JSON.stringify(event));
+            this.log(JSON.stringify(context));
+          },
+          onCommand: (event: any, context: any) => {
+            this.log('command');
+            this.log(JSON.stringify(event));
+            this.log(JSON.stringify(context));
+          },
+        },
+        {
+          menuType: 'submenu',
+          l10nID: menuID,
+          menus: ToolbarPosition.map((value) => ({
+            menuType: 'menuitem',
+            l10nID: `${config.addonRef}-radio-menu-${value}`,
+            onCommand: (event: any, context: any) => {
+              this.log(JSON.stringify(event));
+              this.log(JSON.stringify(context));
+              // this.position = value;
+              // this.styleCurrentTab(window);
+            },
+          })),
+        },
+      ],
+    });
+    this.log('registered with MenuManager');
+    this.log(registeredID);
+  }
+
   addMenuItems(window: _ZoteroTypes.MainWindow): void {
     const doc = window.document;
     const menuId = `${config.addonRef}-radio-menu`;
@@ -164,6 +205,9 @@ export class VerticalToolbar {
 
     window.MozXULElement.insertFTLIfNeeded(`${config.addonRef}-menu.ftl`);
 
+    this.addMenuItems2({ menuID: menuId });
+
+    /*
     // submenu container
     const menu = doc.createXULElement('menu') as XULMenuElement;
     menu.id = menuId;
@@ -206,6 +250,7 @@ export class VerticalToolbar {
       this.log(`successfully inserted menu: ${menu.id}`);
       this.storeAddedElement(menu);
     }
+    */
   }
 
   removeMenuItems(window: _ZoteroTypes.MainWindow): void {
@@ -233,7 +278,8 @@ export class VerticalToolbar {
   }
 
   log(msg: string) {
-    Zotero.debug(`${this.id}: ${msg}`);
+    Zotero.debug(`[${this.id}]: ${msg}`);
+    Zotero.log(`[${this.id}]: ${msg}`);
   }
 }
 
