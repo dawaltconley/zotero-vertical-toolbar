@@ -1,6 +1,6 @@
 {
   "name": "zotero-vertical-toolbar",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Reorients the toolbar of Zotero's reader",
   "config": {
     "addonName": "Vertical Toolbar",
